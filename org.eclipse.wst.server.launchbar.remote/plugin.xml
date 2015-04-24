@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.remote.core.remoteServices">
+      <connectionType
+            capabilities="0"
+            id="org.eclipse.wst.server.launchbar.remote.connection"
+            name="Server Adapter"
+            scheme="dummyscheme">
+      </connectionType>
+   </extension>
+   <extension
+         point="org.eclipse.launchbar.core.launchBarContributions">
+      <targetType
+            connectionTypeId="org.eclipse.wst.server.launchbar.remote.connection"
+            id="org.eclipse.wst.server.launchbar.remote.connection">
+      </targetType>
+      <objectProvider
+            class="org.eclipse.wst.server.launchbar.remote.ModuleObjectProvider"
+            id="org.eclipse.wst.server.launchbar.remote.ModuleObjectProvider">
+      </objectProvider>
+      <descriptorType
+            class="org.eclipse.wst.server.launchbar.remote.ModuleDescriptorType"
+            id="org.eclipse.wst.server.launchbar.remote.ModuleDescriptorType"
+            priority="5">
+      </descriptorType>
+      <configType
+            descriptorType="org.eclipse.wst.server.launchbar.remote.ModuleDescriptorType"
+            isDefault="false"
+            launchConfigurationType="org.eclipse.wst.server.launchbar.remote.serverAdapterLaunch"
+            targetType="org.eclipse.wst.server.launchbar.remote.connection">
+      </configType>
+      <configProvider
+            class="org.eclipse.wst.server.launchbar.remote.ModuleLaunchConfigurationProvider"
+            launchConfigurationType="org.eclipse.wst.server.launchbar.remote.serverAdapterLaunch">
+      </configProvider>
+   </extension>
+   <extension
+         point="org.eclipse.debug.core.launchConfigurationTypes">
+      <launchConfigurationType
+            delegate="org.eclipse.wst.server.launchbar.remote.ServerLaunchBarDelegate"
+            delegateDescription="A launch for executing the &quot;Run on Server&quot; action"
+            delegateName="Run On Server Launch"
+            id="org.eclipse.wst.server.launchbar.remote.serverAdapterLaunch"
+            modes="run,debug,profile"
+            name="Server Adapter Launchbar Configuration"
+            public="false">
+      </launchConfigurationType>
+   </extension>
+
+</plugin>
