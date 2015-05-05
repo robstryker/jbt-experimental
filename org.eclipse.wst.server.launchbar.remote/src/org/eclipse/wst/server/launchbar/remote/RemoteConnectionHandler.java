@@ -1,7 +1,19 @@
+/******************************************************************************* 
+ * Copyright (c) 2015 Red Hat, Inc. 
+ * Distributed under license by Red Hat, Inc. All rights reserved. 
+ * This program is made available under the terms of the 
+ * Eclipse Public License v1.0 which accompanies this distribution, 
+ * and is available at http://www.eclipse.org/legal/epl-v10.html 
+ * 
+ * Contributors: 
+ * Red Hat, Inc. - initial API and implementation 
+ ******************************************************************************/ 
 package org.eclipse.wst.server.launchbar.remote;
 
 import java.util.List;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.remote.core.IRemoteConnection;
 import org.eclipse.remote.core.IRemoteConnectionType;
 import org.eclipse.remote.core.IRemoteConnectionWorkingCopy;
@@ -13,8 +25,22 @@ import org.eclipse.wst.server.core.ServerCore;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
+/**
+ * In charge of adding remote connections based on the creation
+ * or deletion of server adapters in the workspace. 
+ */
 public class RemoteConnectionHandler implements IServerLifecycleListener {
+	
+	/**
+	 * The id of our remote connection type
+	 */
+	private static final String REMOTE_ID = "org.eclipse.wst.server.launchbar.remote.connection";
+	
+	/**
+	 * A reference to the remote services manager
+	 */
 	private IRemoteServicesManager  manager;
+	
 	
 	
 	public RemoteConnectionHandler() {
@@ -30,7 +56,7 @@ public class RemoteConnectionHandler implements IServerLifecycleListener {
 	}
 	@Override
 	public void serverAdded(IServer server) {
-		IRemoteConnectionType type = manager.getConnectionType("org.eclipse.wst.server.launchbar.remote.connection");
+		IRemoteConnectionType type = manager.getConnectionType(REMOTE_ID);
 		try {
 			IRemoteConnectionWorkingCopy wc = type.newConnection(server.getName());
 			wc.setAttribute("serverId", server.getName());
@@ -41,9 +67,9 @@ public class RemoteConnectionHandler implements IServerLifecycleListener {
 	}
 	@Override
 	public void serverChanged(IServer server) {
-		// The change event could be a name change, which would screw us up a bit
 		
-		IRemoteConnectionType type = manager.getConnectionType("org.eclipse.wst.server.launchbar.remote.connection");
+		// The change event could be a name change, which would screw us up a bit
+		IRemoteConnectionType type = manager.getConnectionType(REMOTE_ID);
 		List<IRemoteConnection> con = type.getConnections();
 		IServer[] allServers = ServerCore.getServers();
 		
@@ -54,7 +80,8 @@ public class RemoteConnectionHandler implements IServerLifecycleListener {
 				try {
 					type.removeConnection(rc);
 				} catch(RemoteConnectionException rce) {
-					// TODO
+					IStatus status = new Status(IStatus.INFO, Activator.PLUGIN_ID, rce.getMessage(), rce);
+					Activator.getDefault().getLog().log(status);
 				}
 			}
 		}
@@ -94,8 +121,8 @@ public class RemoteConnectionHandler implements IServerLifecycleListener {
 			try {
 				type.removeConnection(con);
 			} catch (RemoteConnectionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				IStatus status = new Status(IStatus.INFO, Activator.PLUGIN_ID, e.getMessage(), e);
+				Activator.getDefault().getLog().log(status);
 			}
 		}
 	}

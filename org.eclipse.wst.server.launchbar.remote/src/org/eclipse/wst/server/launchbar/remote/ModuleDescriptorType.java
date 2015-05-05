@@ -1,11 +1,24 @@
+/******************************************************************************* 
+ * Copyright (c) 2015 Red Hat, Inc. 
+ * Distributed under license by Red Hat, Inc. All rights reserved. 
+ * This program is made available under the terms of the 
+ * Eclipse Public License v1.0 which accompanies this distribution, 
+ * and is available at http://www.eclipse.org/legal/epl-v10.html 
+ * 
+ * Contributors: 
+ * Red Hat, Inc. - initial API and implementation 
+ ******************************************************************************/ 
 package org.eclipse.wst.server.launchbar.remote;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.launchbar.core.ILaunchDescriptor;
 import org.eclipse.launchbar.core.ILaunchDescriptorType;
-import org.eclipse.wst.server.core.IModule;
-import org.eclipse.wst.server.launchbar.remote.ModuleObjectProvider.ModuleArtifactWrapper;
-import org.eclipse.wst.server.launchbar.remote.ModuleObjectProvider.ModuleWrapper;
+import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleArtifactDetailsLaunchDescriptor;
+import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleArtifactLaunchDescriptor;
+import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleLaunchDescriptor;
+import org.eclipse.wst.server.launchbar.remote.objects.ModuleArtifactDetailsWrapper;
+import org.eclipse.wst.server.launchbar.remote.objects.ModuleArtifactWrapper;
+import org.eclipse.wst.server.launchbar.remote.objects.ModuleWrapper;
 
 public class ModuleDescriptorType implements ILaunchDescriptorType {
 
@@ -16,79 +29,19 @@ public class ModuleDescriptorType implements ILaunchDescriptorType {
 	public boolean ownsLaunchObject(Object launchObject) throws CoreException {
 		if( launchObject instanceof ModuleWrapper)
 			return true;
+		if( launchObject instanceof ModuleArtifactDetailsWrapper) 
+			return true;
 		if( launchObject instanceof ModuleArtifactWrapper) 
 			return true;
 		return false;
 	}
 
-	public  static class ModuleLaunchDescriptor implements ILaunchDescriptor {
-		private ModuleWrapper module;
-		private ILaunchDescriptorType type;
-		public ModuleLaunchDescriptor(ModuleWrapper wrap,ILaunchDescriptorType type) {
-			this.module = wrap;
-			this.type = type;
-		}
-		public IModule getModule() {
-			return module.getModule();
-		}
-		
-		public ModuleWrapper getWrapper() {
-			return module;
-		}
-		
-		@Override
-		public Object getAdapter(Class adapter) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public String getName() {
-			return getModule().getName();
-		}
-
-		@Override
-		public ILaunchDescriptorType getType() {
-			return type;
-		}
-	}
-	
-	public  static class ModuleArtifactLaunchDescriptor implements ILaunchDescriptor {
-		private ModuleArtifactWrapper module;
-		private ILaunchDescriptorType type;
-		public ModuleArtifactLaunchDescriptor(ModuleArtifactWrapper wrap,ILaunchDescriptorType type) {
-			this.module = wrap;
-			this.type = type;
-		}
-		public IModule getModule() {
-			return module.getModule();
-		}
-		
-		public ModuleArtifactWrapper getArtifactWrapper() {
-			return module;
-		}
-		
-		@Override
-		public Object getAdapter(Class adapter) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public String getName() {
-			return module.getName();
-		}
-
-		@Override
-		public ILaunchDescriptorType getType() {
-			return type;
-		}
-	}
-	
 	@Override
 	public ILaunchDescriptor getDescriptor(Object launchObject) throws CoreException {
 		if( launchObject instanceof ModuleWrapper ) 
 			return new ModuleLaunchDescriptor((ModuleWrapper)launchObject, this);
+		if( launchObject instanceof ModuleArtifactDetailsWrapper ) 
+			return new ModuleArtifactDetailsLaunchDescriptor((ModuleArtifactDetailsWrapper)launchObject, this);
 		if( launchObject instanceof ModuleArtifactWrapper ) 
 			return new ModuleArtifactLaunchDescriptor((ModuleArtifactWrapper)launchObject, this);
 		return null;

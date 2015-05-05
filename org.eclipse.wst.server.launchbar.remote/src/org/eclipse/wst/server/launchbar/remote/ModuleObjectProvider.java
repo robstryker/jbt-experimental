@@ -1,3 +1,13 @@
+/******************************************************************************* 
+ * Copyright (c) 2015 Red Hat, Inc. 
+ * Distributed under license by Red Hat, Inc. All rights reserved. 
+ * This program is made available under the terms of the 
+ * Eclipse Public License v1.0 which accompanies this distribution, 
+ * and is available at http://www.eclipse.org/legal/epl-v10.html 
+ * 
+ * Contributors: 
+ * Red Hat, Inc. - initial API and implementation 
+ ******************************************************************************/ 
 package org.eclipse.wst.server.launchbar.remote;
 
 import java.util.ArrayList;
@@ -14,36 +24,52 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationListener;
-import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.launchbar.core.ILaunchBarManager;
 import org.eclipse.launchbar.core.ILaunchObjectProvider;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IModuleArtifact;
 import org.eclipse.wst.server.core.ServerUtil;
-import org.eclipse.wst.server.core.model.ModuleArtifactDelegate;
-import org.eclipse.wst.server.ui.internal.Trace;
+import org.eclipse.wst.server.core.internal.ServerPlugin;
+import org.eclipse.wst.server.launchbar.remote.objects.ModuleArtifactDetailsWrapper;
+import org.eclipse.wst.server.launchbar.remote.objects.ModuleArtifactWrapper;
+import org.eclipse.wst.server.launchbar.remote.objects.ModuleWrapper;
 
+/**
+ * This class provides launchable objects to the framework. 
+ * It currently returns three types of objects:
+ *    1) Existing modules
+ *    2) Module artifact details as pulled from existing launch configs
+ *    3) Module artifacts based on the current workspace selection
+ */
 public class ModuleObjectProvider implements ILaunchObjectProvider, 
-	IResourceChangeListener, ILaunchConfigurationListener {
+	IResourceChangeListener, ILaunchConfigurationListener, ISelectionListener {
 	
 	private ILaunchBarManager manager;
 	private HashMap<IProject, ModuleWrapper[]> knownModules;
-
 	
-	public static class ModuleWrapper {
-		private IModule module;
-		public ModuleWrapper(IModule m) {
-			this.module = m;
-		}
-		
-		public IModule getModule() {
-			return module;
-		}
-	}
+	/**
+	 * Used to store the most recent artifact wrapper corresponding
+	 * to the most recent selection from the selection service
+	 */
+	private ModuleArtifactWrapper mostRecent;
+	
+	
+
 	
 	@Override
 	public void init(ILaunchBarManager manager) throws CoreException {
@@ -65,6 +91,47 @@ public class ModuleObjectProvider implements ILaunchObjectProvider,
 		}
 		// initialize the artifact adapter launches
 		getLaunchManager().addLaunchConfigurationListener(this);
+		
+		
+		delayedAddWorkbenchListener(this);
+	}
+	
+	private void delayedAddWorkbenchListener(final ModuleObjectProvider provider) {
+		new Job("Adding Workbench Selection Listener for server artifacts"){
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				
+				long timeLimit = 60*5*1000;
+				long current = System.currentTimeMillis();
+				long max = current + timeLimit;
+				IWorkbenchWindow window = syncGetActiveWorkbenchWindow();
+				while( window == null && System.currentTimeMillis() < max) {
+					try {
+						System.out.println("*** sleeping 500");
+						Thread.sleep(500);
+					} catch(InterruptedException ie) {
+						ie.printStackTrace();
+					}
+					window = syncGetActiveWorkbenchWindow();
+				}
+				System.out.println("Loop over:  window=" + window);
+				if( window != null ) {
+					window.getSelectionService().addPostSelectionListener(provider);
+					return Status.OK_STATUS;
+				}
+				return Status.CANCEL_STATUS; // TODO error status?
+			}}.schedule();
+	}
+	
+	private IWorkbenchWindow syncGetActiveWorkbenchWindow() {
+		final IWorkbenchWindow[] window = new IWorkbenchWindow[1];
+		Display.getDefault().syncExec(
+				new Runnable(){
+					public void run() {
+						window[0] = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+					}
+				});
+		return window[0];
 	}
 	
 	// To allow override by tests
@@ -187,54 +254,6 @@ public class ModuleObjectProvider implements ILaunchObjectProvider,
 
 	
 	
-	public static class ModuleArtifactWrapper {
-		protected String artifact, clazz, name;
-		protected IModule module;
-		protected ModuleArtifactDelegate moduleArtifact;
-		boolean attemptedArtifactLoad = false;
-		private ModuleArtifactWrapper(String name, String artifact, String clazz ) {
-			this.artifact = artifact;
-			this.clazz = clazz;
-			this.name = getArtifactDelegate() == null ? name : getArtifactDelegate().getName();
-		}
-		
-		public ModuleArtifactDelegate getArtifactDelegate() {
-			if( moduleArtifact == null && !attemptedArtifactLoad) {
-				moduleArtifact = ServerLaunchBarDelegate.getArtifact(clazz, artifact);
-				attemptedArtifactLoad = true;
-			}
-			return moduleArtifact;
-		}
-		
-		public String getArtifactClass() {
-			return clazz;
-		}
-		
-		public String getArtifactString() {
-			return artifact;
-		}
-		
-		public String getName() {
-			return name;
-		}
-		
-		public IModule getModule() {
-			return module;
-		}
-		
-		public boolean equals(Object other) {
-			if(other instanceof ModuleArtifactWrapper) {
-				String otherArt = ((ModuleArtifactWrapper)other).artifact;
-				String otherClazz = ((ModuleArtifactWrapper)other).clazz;
-				return otherArt.equals(this.artifact) && otherClazz.equals(clazz); 
-			}
-			return false;
-		}
-		public int hashcode() {
-			return (artifact + "::" + clazz).hashCode();
-		}
-	}
-	
 	private static String WTP_LAUNCH_TYPE = "org.eclipse.wst.server.ui.launchConfigurationType";
 	
 	@Override
@@ -250,9 +269,7 @@ public class ModuleObjectProvider implements ILaunchObjectProvider,
 		
 	}
 	
-	private ModuleArtifactWrapper getArtifactWrapperFor(ILaunchConfiguration configuration) {
-		System.out.println("Found one");
-		
+	private ModuleArtifactDetailsWrapper getArtifactWrapperFor(ILaunchConfiguration configuration) {
 		String ATTR_SERVER_ID = "server-id";
 		String ATTR_MODULE_ARTIFACT = "module-artifact";
 		String ATTR_MODULE_ARTIFACT_CLASS = "module-artifact-class";
@@ -263,9 +280,10 @@ public class ModuleObjectProvider implements ILaunchObjectProvider,
 		try {
 			String artifact = configuration.getAttribute(ATTR_MODULE_ARTIFACT, (String)null);
 			String clazz = configuration.getAttribute(ATTR_MODULE_ARTIFACT_CLASS, (String)null);
-			
-			ModuleArtifactWrapper wrapper = new ModuleArtifactWrapper(configuration.getName(), artifact, clazz);
-			return wrapper;
+			if( artifact != null && clazz != null ) {
+				ModuleArtifactDetailsWrapper wrapper = new ModuleArtifactDetailsWrapper(configuration.getName(), artifact, clazz);
+				return wrapper;
+			}
 		} catch(CoreException ce) {
 			ce.printStackTrace();
 		}
@@ -277,7 +295,7 @@ public class ModuleObjectProvider implements ILaunchObjectProvider,
 		try {
 			String typeId = configuration.getType().getIdentifier();
 			if("org.eclipse.wst.server.ui.launchConfigurationType".equals(typeId)) {
-				ModuleArtifactWrapper w = getArtifactWrapperFor(configuration);
+				ModuleArtifactDetailsWrapper w = getArtifactWrapperFor(configuration);
 				if( w != null )
 					manager.launchObjectChanged(w);
 			}
@@ -291,12 +309,37 @@ public class ModuleObjectProvider implements ILaunchObjectProvider,
 		try {
 			String typeId = configuration.getType().getIdentifier();
 			if("org.eclipse.wst.server.ui.launchConfigurationType".equals(typeId)) {
-				ModuleArtifactWrapper w = getArtifactWrapperFor(configuration);
+				ModuleArtifactDetailsWrapper w = getArtifactWrapperFor(configuration);
 				if( w != null )
 					manager.launchObjectRemoved(w);
 			}
 		} catch(CoreException ce) {
 			ce.printStackTrace();
+		}
+	}
+
+	
+	@Override
+	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
+		if( selection instanceof IStructuredSelection ) {
+			Object o = ((IStructuredSelection)selection).getFirstElement();
+			final IModuleArtifact[] moduleArtifacts = ServerPlugin.getModuleArtifacts(o);
+			System.out.println(moduleArtifacts == null ? "null" : moduleArtifacts.length);
+			if( moduleArtifacts != null && moduleArtifacts.length > 0 ) {
+				if( mostRecent != null ) {
+					try {
+						manager.launchObjectRemoved(mostRecent);
+					} catch(CoreException ce) {
+						// TODO log
+					}
+				}
+				mostRecent = new ModuleArtifactWrapper(moduleArtifacts[0]);
+				try {
+					manager.launchObjectAdded(mostRecent);
+				} catch(CoreException ce) {
+					// TODO log
+				}
+			}
 		}
 	}
 }

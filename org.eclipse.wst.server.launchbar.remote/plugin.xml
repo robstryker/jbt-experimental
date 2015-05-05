@@ -48,5 +48,16 @@
             public="false">
       </launchConfigurationType>
    </extension>
+   <extension
+         point="org.eclipse.launchbar.ui.launchBarUIContributions">
+      <descriptorUI
+            descriptorTypeId="org.eclipse.wst.server.launchbar.remote.ModuleDescriptorType"
+            labelProvider="org.eclipse.wst.server.launchbar.remote.ui.ModuleDescriptorLabelProvider">
+      </descriptorUI>
+      <descriptorUI
+            descriptorTypeId="org.eclipse.wst.server.launchbar.remote.ModuleDescriptorType"
+            labelProvider="org.eclipse.wst.server.launchbar.remote.ui.ModuleDescriptorLabelProvider">
+      </descriptorUI>
+   </extension>
 
 </plugin>
