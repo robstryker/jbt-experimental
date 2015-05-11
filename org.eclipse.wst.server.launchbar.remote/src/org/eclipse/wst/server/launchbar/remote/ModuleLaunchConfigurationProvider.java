@@ -89,8 +89,11 @@ public class ModuleLaunchConfigurationProvider implements ILaunchConfigurationPr
 			wc.setAttribute(ServerLaunchBarDelegate.ATTR_ARTIFACT_STRING, ((ModuleArtifactLaunchDescriptor)descriptor).getArtifactWrapper().getArtifactString());
 			wc.setAttribute(ServerLaunchBarDelegate.ATTR_ARTIFACT_CLASS, ((ModuleArtifactLaunchDescriptor)descriptor).getArtifactWrapper().getArtifactClass());
 		}
-
-		return wc;
+		
+		// These launches are private and should not appear in the UI
+		wc.setAttribute(ILaunchManager.ATTR_PRIVATE, true);
+		
+		return wc.doSave();
 	}
 
 }

@@ -17,6 +17,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
+import org.eclipse.debug.core.model.IProcess;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -33,6 +34,7 @@ import org.eclipse.wst.server.launchbar.remote.launch.DeclaredArtifactRunOnServe
 import org.eclipse.wst.server.launchbar.remote.launch.DeclaredServerRunOnServerActionDelegate;
 import org.eclipse.wst.server.ui.internal.Trace;
 import org.eclipse.wst.server.ui.internal.actions.RunOnServerActionDelegate;
+import org.eclipse.wst.server.ui.internal.actions.RunOnServerProcess;
 
 
 /**
@@ -52,6 +54,10 @@ public class ServerLaunchBarDelegate implements ILaunchConfigurationDelegate {
 	@Override
 	public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor)
 			throws CoreException {
+		IProcess dummyProcess = new RunOnServerProcess(launch);
+		launch.addProcess(dummyProcess);
+		
+		
 		IRemoteLaunchConfigService service = Activator.getService(IRemoteLaunchConfigService.class);
 		IRemoteConnection connection = service.getLastActiveConnection(configuration.getType());
 		String serverName = connection.getName();
@@ -70,7 +76,10 @@ public class ServerLaunchBarDelegate implements ILaunchConfigurationDelegate {
 			launchModule(s, configuration);
 		} else if( ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE_ARTIFACT.equals(launchType)) {
 			launchArtifact(s, configuration);
-		} 
+		}
+		
+		dummyProcess.terminate();
+		launch.terminate();
 	}
 	
 	private void launchModule(IServer server, ILaunchConfiguration configuration) throws CoreException {

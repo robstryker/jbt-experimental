@@ -36,6 +36,8 @@ public class RemoteConnectionHandler implements IServerLifecycleListener {
 	 */
 	private static final String REMOTE_ID = "org.eclipse.wst.server.launchbar.remote.connection";
 	
+	public static final String SERVER_ID = "serverId";
+	
 	/**
 	 * A reference to the remote services manager
 	 */
@@ -59,7 +61,7 @@ public class RemoteConnectionHandler implements IServerLifecycleListener {
 		IRemoteConnectionType type = manager.getConnectionType(REMOTE_ID);
 		try {
 			IRemoteConnectionWorkingCopy wc = type.newConnection(server.getName());
-			wc.setAttribute("serverId", server.getName());
+			wc.setAttribute(SERVER_ID, server.getId());
 			IRemoteConnection con = wc.save();
 		} catch (RemoteConnectionException e) {
 			e.printStackTrace();
@@ -76,7 +78,8 @@ public class RemoteConnectionHandler implements IServerLifecycleListener {
 		// remove connections with no matching server
 		for( int i = 0; i < con.size(); i++ ) {
 			IRemoteConnection rc = con.get(i);
-			if( findServerFor(rc, allServers) == null ) {
+			IServer match = findServerFor(rc, allServers);
+			if(  match == null || match.equals(server)) {
 				try {
 					type.removeConnection(rc);
 				} catch(RemoteConnectionException rce) {
@@ -105,17 +108,13 @@ public class RemoteConnectionHandler implements IServerLifecycleListener {
 	}
 	
 	private IServer findServerFor(IRemoteConnection rc, IServer[] all) {
-		for( int i = 0; i < all.length; i++ ) {
-			if( all[i].getName().equals(rc.getName())) {
-				return all[i];
-			}
-		}
-		return null;
+		String id = rc.getAttribute(SERVER_ID);
+		return ServerCore.findServer(id);
 	}
 	
 	@Override
 	public void serverRemoved(IServer server) {
-		IRemoteConnectionType type = manager.getConnectionType("org.eclipse.wst.server.launchbar.remote.connection");
+		IRemoteConnectionType type = manager.getConnectionType(REMOTE_ID);
 		IRemoteConnection con = type.getConnection(server.getName());
 		if( con != null ) {
 			try {

@@ -261,7 +261,8 @@ public class ModuleObjectProvider implements ILaunchObjectProvider,
 		try {
 			String typeId = configuration.getType().getIdentifier();
 			if(WTP_LAUNCH_TYPE.equals(typeId)) {
-				manager.launchObjectAdded(getArtifactWrapperFor(configuration));
+				ModuleArtifactDetailsWrapper wrap = getArtifactWrapperFor(configuration); 
+				manager.launchObjectAdded(wrap);
 			}
 		} catch(CoreException ce) {
 			ce.printStackTrace();
@@ -294,7 +295,7 @@ public class ModuleObjectProvider implements ILaunchObjectProvider,
 	public void launchConfigurationChanged(ILaunchConfiguration configuration) {
 		try {
 			String typeId = configuration.getType().getIdentifier();
-			if("org.eclipse.wst.server.ui.launchConfigurationType".equals(typeId)) {
+			if(WTP_LAUNCH_TYPE.equals(typeId)) {
 				ModuleArtifactDetailsWrapper w = getArtifactWrapperFor(configuration);
 				if( w != null )
 					manager.launchObjectChanged(w);
