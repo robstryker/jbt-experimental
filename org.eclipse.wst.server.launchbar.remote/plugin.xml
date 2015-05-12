@@ -2,24 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="org.eclipse.remote.core.remoteServices">
-      <connectionType
-            capabilities="0"
-            id="org.eclipse.wst.server.launchbar.remote.connection"
-            name="Server Adapter"
-            scheme="dummyscheme"
-            visible="false">
-      </connectionType>
-   </extension>
-   
-   
-   
-   <extension
          point="org.eclipse.launchbar.core.launchBarContributions">
-      <targetType
-            connectionTypeId="org.eclipse.wst.server.launchbar.remote.connection"
-            id="org.eclipse.wst.server.launchbar.remote.connection">
-      </targetType>
       <objectProvider
             class="org.eclipse.wst.server.launchbar.remote.ModuleObjectProvider"
             id="org.eclipse.wst.server.launchbar.remote.ModuleObjectProvider">
@@ -33,12 +16,16 @@
             descriptorType="org.eclipse.wst.server.launchbar.remote.ModuleDescriptorType"
             isDefault="false"
             launchConfigurationType="org.eclipse.wst.server.launchbar.remote.serverAdapterLaunch"
-            targetType="org.eclipse.wst.server.launchbar.remote.connection">
+            targetType="org.eclipse.remote.JSch">
       </configType>
       <configProvider
             class="org.eclipse.wst.server.launchbar.remote.ModuleLaunchConfigurationProvider"
             launchConfigurationType="org.eclipse.wst.server.launchbar.remote.serverAdapterLaunch">
       </configProvider>
+      <targetType
+            connectionTypeId="org.eclipse.remote.JSch"
+            id="org.eclipse.remote.JSch">
+      </targetType>
    </extension>
    <extension
          point="org.eclipse.debug.core.launchConfigurationTypes">
@@ -52,26 +39,4 @@
             public="false">
       </launchConfigurationType>
    </extension>
-   <extension
-         point="org.eclipse.launchbar.ui.launchBarUIContributions">
-      <descriptorUI
-            descriptorTypeId="org.eclipse.wst.server.launchbar.remote.ModuleDescriptorType"
-            labelProvider="org.eclipse.wst.server.launchbar.remote.ui.ModuleDescriptorLabelProvider">
-      </descriptorUI>
-      <descriptorUI
-            descriptorTypeId="org.eclipse.wst.server.launchbar.remote.ModuleDescriptorType"
-            labelProvider="org.eclipse.wst.server.launchbar.remote.ui.ModuleDescriptorLabelProvider">
-      </descriptorUI>
-   </extension>
-   
-   
-   <extension
-         point="org.eclipse.remote.ui.remoteConnectionTypeUI">
-      <connectionType
-            icon="icons/server_perspective.gif"
-            labelProvider="org.eclipse.wst.server.launchbar.remote.ui.ServerRemoteLabelProvider"
-            typeId="org.eclipse.wst.server.launchbar.remote.connection">
-      </connectionType>
-   </extension>
-
 </plugin>

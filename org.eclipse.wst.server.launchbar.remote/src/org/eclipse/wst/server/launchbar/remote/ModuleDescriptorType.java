@@ -13,12 +13,8 @@ package org.eclipse.wst.server.launchbar.remote;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.launchbar.core.ILaunchDescriptor;
 import org.eclipse.launchbar.core.ILaunchDescriptorType;
-import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleArtifactDetailsLaunchDescriptor;
-import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleArtifactLaunchDescriptor;
-import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleLaunchDescriptor;
-import org.eclipse.wst.server.launchbar.remote.objects.ModuleArtifactDetailsWrapper;
-import org.eclipse.wst.server.launchbar.remote.objects.ModuleArtifactWrapper;
-import org.eclipse.wst.server.launchbar.remote.objects.ModuleWrapper;
+import org.eclipse.wst.server.launchbar.remote.ModuleObjectProvider.MyObject;
+import org.eclipse.wst.server.launchbar.remote.descriptors.MyObjectDescriptor;
 
 public class ModuleDescriptorType implements ILaunchDescriptorType {
 
@@ -27,23 +23,15 @@ public class ModuleDescriptorType implements ILaunchDescriptorType {
 	
 	@Override
 	public boolean ownsLaunchObject(Object launchObject) throws CoreException {
-		if( launchObject instanceof ModuleWrapper)
-			return true;
-		if( launchObject instanceof ModuleArtifactDetailsWrapper) 
-			return true;
-		if( launchObject instanceof ModuleArtifactWrapper) 
+		if( launchObject instanceof MyObject)
 			return true;
 		return false;
 	}
 
 	@Override
 	public ILaunchDescriptor getDescriptor(Object launchObject) throws CoreException {
-		if( launchObject instanceof ModuleWrapper ) 
-			return new ModuleLaunchDescriptor((ModuleWrapper)launchObject, this);
-		if( launchObject instanceof ModuleArtifactDetailsWrapper ) 
-			return new ModuleArtifactDetailsLaunchDescriptor((ModuleArtifactDetailsWrapper)launchObject, this);
-		if( launchObject instanceof ModuleArtifactWrapper ) 
-			return new ModuleArtifactLaunchDescriptor((ModuleArtifactWrapper)launchObject, this);
+		if( launchObject instanceof MyObject ) 
+			return new MyObjectDescriptor(((MyObject)launchObject).name, this);
 		return null;
 	}
 

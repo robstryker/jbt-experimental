@@ -18,9 +18,7 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.launchbar.core.ILaunchConfigurationProvider;
 import org.eclipse.launchbar.core.ILaunchDescriptor;
-import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleArtifactDetailsLaunchDescriptor;
-import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleArtifactLaunchDescriptor;
-import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleLaunchDescriptor;
+import org.eclipse.wst.server.launchbar.remote.descriptors.MyObjectDescriptor;
 
 public class ModuleLaunchConfigurationProvider implements ILaunchConfigurationProvider {
 
@@ -28,6 +26,31 @@ public class ModuleLaunchConfigurationProvider implements ILaunchConfigurationPr
 		// TODO Auto-generated constructor stub
 	}
 
+	@Override
+	public ILaunchConfiguration createLaunchConfiguration(ILaunchManager launchManager, ILaunchDescriptor descriptor)
+			throws CoreException {
+		
+		// Ideally, I would like to at least SEE the target, here...
+		// So I can check internal details about its type and respond with
+		// differently-configured launch configs, or different specific
+		// launch configs that are already created...
+		
+		// But I have no ability to do that here. 
+		
+		ILaunchConfigurationType type = getLaunchConfigurationType();
+		String descriptorName = descriptor.getName();
+		String validName = getValidLaunchConfigurationName(descriptorName);
+		ILaunchConfigurationWorkingCopy wc = type.newInstance(null, validName);
+		
+		
+		if( descriptor instanceof MyObjectDescriptor ) {
+			wc.setAttribute(ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE, "ExampleProperty");
+			return wc;
+		}
+		return wc.doSave();
+	}
+
+	
 	@Override
 	public Object launchConfigurationAdded(ILaunchConfiguration configuration) throws CoreException {
 		// TODO Auto-generated method stub
@@ -57,43 +80,4 @@ public class ModuleLaunchConfigurationProvider implements ILaunchConfigurationPr
 		}
 		return s;
 	}
-	
-	
-	@Override
-	public ILaunchConfiguration createLaunchConfiguration(ILaunchManager launchManager, ILaunchDescriptor descriptor)
-			throws CoreException {
-		ILaunchConfigurationType type = getLaunchConfigurationType();
-		String descriptorName = descriptor.getName();
-		String validName = getValidLaunchConfigurationName(descriptorName);
-		ILaunchConfigurationWorkingCopy wc = type.newInstance(null, validName);
-		
-		
-		if( descriptor instanceof ModuleLaunchDescriptor ) {
-			
-			// I would prefer to somehow pass an actual Object here, but cannot persist it in launch config
-			// So instead i must workaround by passing the project, and later trying to get 
-			// module from project. Unfortunately, its not 1:1 mapping, so I may lose my module selection
-			wc.setAttribute(ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE, ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE_MODULE);
-			wc.setAttribute(ServerLaunchBarDelegate.ATTR_PROJECT, ((ModuleLaunchDescriptor)descriptor).getModule().getProject().getName());
-			return wc;
-		}
-		
-		if( descriptor instanceof ModuleArtifactDetailsLaunchDescriptor ) {
-			wc.setAttribute(ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE, ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE_ARTIFACT);
-			wc.setAttribute(ServerLaunchBarDelegate.ATTR_ARTIFACT_STRING, ((ModuleArtifactDetailsLaunchDescriptor)descriptor).getArtifactWrapper().getArtifactString());
-			wc.setAttribute(ServerLaunchBarDelegate.ATTR_ARTIFACT_CLASS, ((ModuleArtifactDetailsLaunchDescriptor)descriptor).getArtifactWrapper().getArtifactClass());
-		}
-
-		if( descriptor instanceof ModuleArtifactLaunchDescriptor ) {
-			wc.setAttribute(ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE, ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE_ARTIFACT);
-			wc.setAttribute(ServerLaunchBarDelegate.ATTR_ARTIFACT_STRING, ((ModuleArtifactLaunchDescriptor)descriptor).getArtifactWrapper().getArtifactString());
-			wc.setAttribute(ServerLaunchBarDelegate.ATTR_ARTIFACT_CLASS, ((ModuleArtifactLaunchDescriptor)descriptor).getArtifactWrapper().getArtifactClass());
-		}
-		
-		// These launches are private and should not appear in the UI
-		wc.setAttribute(ILaunchManager.ATTR_PRIVATE, true);
-		
-		return wc.doSave();
-	}
-
 }

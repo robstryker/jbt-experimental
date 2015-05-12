@@ -12,39 +12,25 @@ package org.eclipse.wst.server.launchbar.remote.descriptors;
 
 import org.eclipse.launchbar.core.ILaunchDescriptor;
 import org.eclipse.launchbar.core.ILaunchDescriptorType;
-import org.eclipse.wst.server.core.IModule;
-import org.eclipse.wst.server.launchbar.remote.ModuleObjectProvider;
-import org.eclipse.wst.server.launchbar.remote.objects.ModuleWrapper;
 
 /**
- * A launch descriptor representing a module
+ * A launch descriptor representing a module artifact
  */
-public class ModuleLaunchDescriptor implements ILaunchDescriptor {
-	private ModuleWrapper module;
+public class MyObjectDescriptor implements ILaunchDescriptor {
+	private String name;
 	private ILaunchDescriptorType type;
-	public ModuleLaunchDescriptor(ModuleWrapper wrap,ILaunchDescriptorType type) {
-		this.module = wrap;
+	public MyObjectDescriptor(String name, ILaunchDescriptorType type) {
+		this.name = name;
 		this.type = type;
 	}
-	public IModule getModule() {
-		return module.getModule();
+	public String getName() {
+		return name;
 	}
-	
-	public ModuleWrapper getWrapper() {
-		return module;
-	}
-	
 	@Override
-	public Object getAdapter(Class adapter) {
+	public <T> T getAdapter(Class<T> adapter) {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public String getName() {
-		return getModule().getName();
-	}
-
 	@Override
 	public ILaunchDescriptorType getType() {
 		return type;
