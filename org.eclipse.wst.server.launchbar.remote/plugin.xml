@@ -4,12 +4,16 @@
    <extension
          point="org.eclipse.remote.core.remoteServices">
       <connectionType
-            capabilities="0"
+            canAdd="false"
             id="org.eclipse.wst.server.launchbar.remote.connection"
             name="Server Adapter"
-            scheme="dummyscheme"
-            visible="false">
+            scheme="dummyscheme">
       </connectionType>
+      <connectionTypeService
+            connectionTypeId="org.eclipse.wst.server.launchbar.remote.connection"
+            factory="org.eclipse.wst.server.launchbar.remote.ui.RemoteTypeUIService$Factory"
+            service="org.eclipse.remote.ui.IRemoteUIConnectionService">
+      </connectionTypeService>
    </extension>
    
    
@@ -36,8 +40,10 @@
             targetType="org.eclipse.wst.server.launchbar.remote.connection">
       </configType>
       <configProvider
+            descriptorType="org.eclipse.wst.server.launchbar.remote.ModuleDescriptorType"
             class="org.eclipse.wst.server.launchbar.remote.ModuleLaunchConfigurationProvider"
-            launchConfigurationType="org.eclipse.wst.server.launchbar.remote.serverAdapterLaunch">
+            launchConfigurationType="org.eclipse.wst.server.launchbar.remote.serverAdapterLaunch"
+            priority="1">
       </configProvider>
    </extension>
    <extension
@@ -62,16 +68,6 @@
             descriptorTypeId="org.eclipse.wst.server.launchbar.remote.ModuleDescriptorType"
             labelProvider="org.eclipse.wst.server.launchbar.remote.ui.ModuleDescriptorLabelProvider">
       </descriptorUI>
-   </extension>
-   
-   
-   <extension
-         point="org.eclipse.remote.ui.remoteConnectionTypeUI">
-      <connectionType
-            icon="icons/server_perspective.gif"
-            labelProvider="org.eclipse.wst.server.launchbar.remote.ui.ServerRemoteLabelProvider"
-            typeId="org.eclipse.wst.server.launchbar.remote.connection">
-      </connectionType>
    </extension>
 
 </plugin>

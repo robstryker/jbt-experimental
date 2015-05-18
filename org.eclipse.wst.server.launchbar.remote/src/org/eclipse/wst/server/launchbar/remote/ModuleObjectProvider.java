@@ -45,6 +45,7 @@ import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IModuleArtifact;
 import org.eclipse.wst.server.core.ServerUtil;
 import org.eclipse.wst.server.core.internal.ServerPlugin;
+import org.eclipse.wst.server.launchbar.remote.objects.LaunchedArtifacts;
 import org.eclipse.wst.server.launchbar.remote.objects.ModuleArtifactDetailsWrapper;
 import org.eclipse.wst.server.launchbar.remote.objects.ModuleArtifactWrapper;
 import org.eclipse.wst.server.launchbar.remote.objects.ModuleWrapper;
@@ -293,33 +294,24 @@ public class ModuleObjectProvider implements ILaunchObjectProvider,
 
 	@Override
 	public void launchConfigurationChanged(ILaunchConfiguration configuration) {
-		try {
-			String typeId = configuration.getType().getIdentifier();
-			if(WTP_LAUNCH_TYPE.equals(typeId)) {
-				ModuleArtifactDetailsWrapper w = getArtifactWrapperFor(configuration);
-				if( w != null )
-					manager.launchObjectChanged(w);
-			}
-		} catch(CoreException ce) {
-			ce.printStackTrace();
-		}
+		// Can do nothing. Can't even get the type or any attributes
 	}
 
 	@Override
 	public void launchConfigurationRemoved(ILaunchConfiguration configuration) {
-		try {
-			String typeId = configuration.getType().getIdentifier();
-			if("org.eclipse.wst.server.ui.launchConfigurationType".equals(typeId)) {
-				ModuleArtifactDetailsWrapper w = getArtifactWrapperFor(configuration);
-				if( w != null )
-					manager.launchObjectRemoved(w);
-			}
-		} catch(CoreException ce) {
-			ce.printStackTrace();
-		}
+		// Cannot check type
+//		try {
+//			String typeId = configuration.getType().getIdentifier();
+//			if("org.eclipse.wst.server.ui.launchConfigurationType".equals(typeId)) {
+//				ModuleArtifactDetailsWrapper w = getArtifactWrapperFor(configuration);
+//				if( w != null )
+//					manager.launchObjectRemoved(w);
+//			}
+//		} catch(CoreException ce) {
+//			ce.printStackTrace();
+//		}
 	}
 
-	
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
 		if( selection instanceof IStructuredSelection ) {
@@ -329,7 +321,8 @@ public class ModuleObjectProvider implements ILaunchObjectProvider,
 			if( moduleArtifacts != null && moduleArtifacts.length > 0 ) {
 				if( mostRecent != null ) {
 					try {
-						manager.launchObjectRemoved(mostRecent);
+						if( !LaunchedArtifacts.getDefault().hasBeenLaunched(mostRecent))
+							manager.launchObjectRemoved(mostRecent);
 					} catch(CoreException ce) {
 						// TODO log
 					}

@@ -22,9 +22,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.launchbar.core.internal.Activator;
-import org.eclipse.remote.core.IRemoteConnection;
-import org.eclipse.remote.core.launch.IRemoteLaunchConfigService;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.wst.server.core.IModuleArtifact;
 import org.eclipse.wst.server.core.IServer;
@@ -32,6 +29,8 @@ import org.eclipse.wst.server.core.ServerCore;
 import org.eclipse.wst.server.core.model.ModuleArtifactDelegate;
 import org.eclipse.wst.server.launchbar.remote.launch.DeclaredArtifactRunOnServerActionDelegate;
 import org.eclipse.wst.server.launchbar.remote.launch.DeclaredServerRunOnServerActionDelegate;
+import org.eclipse.wst.server.launchbar.remote.objects.LaunchedArtifacts;
+import org.eclipse.wst.server.launchbar.remote.objects.ModuleArtifactDetailsWrapper;
 import org.eclipse.wst.server.ui.internal.Trace;
 import org.eclipse.wst.server.ui.internal.actions.RunOnServerActionDelegate;
 import org.eclipse.wst.server.ui.internal.actions.RunOnServerProcess;
@@ -49,6 +48,8 @@ public class ServerLaunchBarDelegate implements ILaunchConfigurationDelegate {
 	public static final String ATTR_ARTIFACT_STRING = "artifactString";
 	public static final String ATTR_ARTIFACT_CLASS = "artifactClass";
 	public static final String ATTR_PROJECT = "my.projectname";
+	public static final String ATTR_TARGET_NAME = "target.name";
+
 	
 	
 	@Override
@@ -57,20 +58,8 @@ public class ServerLaunchBarDelegate implements ILaunchConfigurationDelegate {
 		IProcess dummyProcess = new RunOnServerProcess(launch);
 		launch.addProcess(dummyProcess);
 		
-		
-		IRemoteLaunchConfigService service = Activator.getService(IRemoteLaunchConfigService.class);
-		IRemoteConnection connection = service.getLastActiveConnection(configuration.getType());
-		String serverName = connection.getName();
-		IServer s = ServerCore.findServer(serverName);
-		if( s == null ) {
-			IServer[] all = ServerCore.getServers();
-			for( int i = 0; i < all.length; i++ ) {
-				if( all[i].getName().equals(serverName)) {
-					s = all[i];
-				}
-			}
-		}
-		
+
+		IServer s = findServer(configuration);
 		String launchType = configuration.getAttribute(ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE, (String)null);
 		if( ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE_MODULE.equals(launchType)) {
 			launchModule(s, configuration);
@@ -80,6 +69,18 @@ public class ServerLaunchBarDelegate implements ILaunchConfigurationDelegate {
 		
 		dummyProcess.terminate();
 		launch.terminate();
+	}
+	
+	private IServer findServer(ILaunchConfiguration config) throws CoreException {
+		String name = config.getAttribute(ATTR_TARGET_NAME, (String)null);
+		if( name != null ) {
+			for( IServer s : ServerCore.getServers()) {
+				if( s.getId().equals(name) || s.getName().equals(name)) {
+					return s;
+				}
+			}
+		}
+		return null;
 	}
 	
 	private void launchModule(IServer server, ILaunchConfiguration configuration) throws CoreException {
@@ -108,7 +109,11 @@ public class ServerLaunchBarDelegate implements ILaunchConfigurationDelegate {
 	private void launchArtifact(IServer server, ILaunchConfiguration configuration) throws CoreException {
 		final IServer s2 = server;
 		if( s2 != null ) {
-			IModuleArtifact[] art = new IModuleArtifact[]{getArtifact(configuration)};
+			String clazz = configuration.getAttribute(ATTR_ARTIFACT_CLASS, (String)null);
+			String serial = configuration.getAttribute(ATTR_ARTIFACT_STRING, (String)null);
+			IModuleArtifact artifact = getArtifact(clazz, serial);
+			markLaunched(configuration.getName(), clazz, serial);
+			IModuleArtifact[] art = new IModuleArtifact[]{artifact};
 			final DeclaredArtifactRunOnServerActionDelegate action = new DeclaredArtifactRunOnServerActionDelegate(s2, art);
 			final IAction dummyAction = new Action(){
 			};
@@ -122,14 +127,9 @@ public class ServerLaunchBarDelegate implements ILaunchConfigurationDelegate {
 		}		
 	}
 
-	
-	public static IModuleArtifact getArtifact(ILaunchConfiguration config) {
-		try {
-			return getArtifact(config.getAttribute(ATTR_ARTIFACT_CLASS, (String)null), config.getAttribute(ATTR_ARTIFACT_STRING, (String)null));
-		} catch(CoreException  ce) {
-			ce.printStackTrace();
-		}
-		return null;
+	private void markLaunched(String name, String clazz, String serial) {
+		ModuleArtifactDetailsWrapper details = new ModuleArtifactDetailsWrapper(name, serial, clazz);
+		LaunchedArtifacts.getDefault().markLaunched(details);
 	}
 	
 	public static ModuleArtifactDelegate getArtifact(String clazz, String str) {

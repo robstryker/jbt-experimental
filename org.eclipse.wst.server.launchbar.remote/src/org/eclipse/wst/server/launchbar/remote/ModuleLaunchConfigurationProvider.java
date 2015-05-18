@@ -18,31 +18,17 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.launchbar.core.ILaunchConfigurationProvider;
 import org.eclipse.launchbar.core.ILaunchDescriptor;
+import org.eclipse.remote.core.IRemoteConnection;
 import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleArtifactDetailsLaunchDescriptor;
 import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleArtifactLaunchDescriptor;
 import org.eclipse.wst.server.launchbar.remote.descriptors.ModuleLaunchDescriptor;
 
 public class ModuleLaunchConfigurationProvider implements ILaunchConfigurationProvider {
-
+	private static final String LAUNCH_TYPE_ID = "org.eclipse.wst.server.launchbar.remote.serverAdapterLaunch";
+	private static final String TARGET_TYPE_ID = "org.eclipse.wst.server.launchbar.remote.connection";
+	
 	public ModuleLaunchConfigurationProvider() {
 		// TODO Auto-generated constructor stub
-	}
-
-	@Override
-	public Object launchConfigurationAdded(ILaunchConfiguration configuration) throws CoreException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean launchConfigurationRemoved(ILaunchConfiguration configuration) throws CoreException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public ILaunchConfigurationType getLaunchConfigurationType() throws CoreException {
-		return DebugPlugin.getDefault().getLaunchManager().getLaunchConfigurationType("org.eclipse.wst.server.launchbar.remote.serverAdapterLaunch");
 	}
 
 	
@@ -58,11 +44,25 @@ public class ModuleLaunchConfigurationProvider implements ILaunchConfigurationPr
 		return s;
 	}
 	
+	@Override
+	public boolean supports(ILaunchDescriptor descriptor, IRemoteConnection target) throws CoreException {
+		if( target.getConnectionType().getId().equals(TARGET_TYPE_ID)) {
+			return true;
+		}
+		return false;
+	}
+
 	
 	@Override
-	public ILaunchConfiguration createLaunchConfiguration(ILaunchManager launchManager, ILaunchDescriptor descriptor)
+	public ILaunchConfigurationType getLaunchConfigurationType(ILaunchDescriptor descriptor, IRemoteConnection target)
 			throws CoreException {
-		ILaunchConfigurationType type = getLaunchConfigurationType();
+		return DebugPlugin.getDefault().getLaunchManager().getLaunchConfigurationType(LAUNCH_TYPE_ID);
+	}
+
+	@Override
+	public ILaunchConfiguration getLaunchConfiguration(ILaunchDescriptor descriptor, IRemoteConnection target)
+			throws CoreException {
+		ILaunchConfigurationType type = getLaunchConfigurationType(descriptor, target);
 		String descriptorName = descriptor.getName();
 		String validName = getValidLaunchConfigurationName(descriptorName);
 		ILaunchConfigurationWorkingCopy wc = type.newInstance(null, validName);
@@ -75,6 +75,7 @@ public class ModuleLaunchConfigurationProvider implements ILaunchConfigurationPr
 			// module from project. Unfortunately, its not 1:1 mapping, so I may lose my module selection
 			wc.setAttribute(ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE, ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE_MODULE);
 			wc.setAttribute(ServerLaunchBarDelegate.ATTR_PROJECT, ((ModuleLaunchDescriptor)descriptor).getModule().getProject().getName());
+			wc.setAttribute(ServerLaunchBarDelegate.ATTR_TARGET_NAME, target.getName());
 			return wc;
 		}
 		
@@ -82,18 +83,53 @@ public class ModuleLaunchConfigurationProvider implements ILaunchConfigurationPr
 			wc.setAttribute(ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE, ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE_ARTIFACT);
 			wc.setAttribute(ServerLaunchBarDelegate.ATTR_ARTIFACT_STRING, ((ModuleArtifactDetailsLaunchDescriptor)descriptor).getArtifactWrapper().getArtifactString());
 			wc.setAttribute(ServerLaunchBarDelegate.ATTR_ARTIFACT_CLASS, ((ModuleArtifactDetailsLaunchDescriptor)descriptor).getArtifactWrapper().getArtifactClass());
+			wc.setAttribute(ServerLaunchBarDelegate.ATTR_TARGET_NAME, target.getName());
 		}
 
 		if( descriptor instanceof ModuleArtifactLaunchDescriptor ) {
 			wc.setAttribute(ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE, ServerLaunchBarDelegate.ATTR_LAUNCH_TYPE_ARTIFACT);
 			wc.setAttribute(ServerLaunchBarDelegate.ATTR_ARTIFACT_STRING, ((ModuleArtifactLaunchDescriptor)descriptor).getArtifactWrapper().getArtifactString());
 			wc.setAttribute(ServerLaunchBarDelegate.ATTR_ARTIFACT_CLASS, ((ModuleArtifactLaunchDescriptor)descriptor).getArtifactWrapper().getArtifactClass());
+			wc.setAttribute(ServerLaunchBarDelegate.ATTR_TARGET_NAME, target.getName());
 		}
 		
 		// These launches are private and should not appear in the UI
 		wc.setAttribute(ILaunchManager.ATTR_PRIVATE, true);
 		
 		return wc.doSave();
+	}
+
+	@Override
+	public boolean ownsLaunchConfiguration(ILaunchConfiguration configuration) throws CoreException {
+		if( configuration != null && configuration.getType() != null ) {
+			return LAUNCH_TYPE_ID.equals(configuration.getType().getIdentifier());
+		}
+		return false;
+	}
+
+	@Override
+	public void launchDescriptorRemoved(ILaunchDescriptor descriptor) throws CoreException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void launchTargetRemoved(IRemoteConnection target) throws CoreException {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public Object launchConfigurationAdded(ILaunchConfiguration configuration) throws CoreException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean launchConfigurationRemoved(ILaunchConfiguration configuration) throws CoreException {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }
