@@ -90,6 +90,7 @@ public class RemoteConnectionHandler implements IServerLifecycleListener {
 		}
 		
 		// Add any connections for new servers
+		con = type.getConnections();
 		allServers = ServerCore.getServers();
 		for( int i = 0; i < allServers.length; i++ ) {
 			if( findConnectionFor(allServers[i], con) == null) {

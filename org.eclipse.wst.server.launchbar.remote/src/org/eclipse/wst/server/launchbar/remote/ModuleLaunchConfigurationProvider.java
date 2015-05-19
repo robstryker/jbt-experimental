@@ -119,13 +119,6 @@ public class ModuleLaunchConfigurationProvider implements ILaunchConfigurationPr
 		
 	}
 
-
-	@Override
-	public Object launchConfigurationAdded(ILaunchConfiguration configuration) throws CoreException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	@Override
 	public boolean launchConfigurationRemoved(ILaunchConfiguration configuration) throws CoreException {
 		// TODO Auto-generated method stub
