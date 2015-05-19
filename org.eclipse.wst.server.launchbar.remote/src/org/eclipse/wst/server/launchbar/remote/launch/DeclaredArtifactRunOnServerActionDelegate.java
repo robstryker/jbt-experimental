@@ -17,6 +17,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.IBreakpointManager;
 import org.eclipse.debug.core.ILaunch;
@@ -31,6 +32,7 @@ import org.eclipse.wst.server.core.IModuleArtifact;
 import org.eclipse.wst.server.core.IModuleType;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.IServerType;
+import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.ServerCore;
 import org.eclipse.wst.server.core.ServerUtil;
 import org.eclipse.wst.server.core.internal.IClient;
@@ -55,16 +57,13 @@ import org.eclipse.wst.server.ui.internal.wizard.RunOnServerWizard;
  * this class must copy a fairly large amount of logic to override
  * the module artifact.
  */
-public class DeclaredArtifactRunOnServerActionDelegate extends RunOnServerActionDelegate {
-	private IServer s2;
+public class DeclaredArtifactRunOnServerActionDelegate extends DeclaredServerRunOnServerActionDelegate {
 	private IModuleArtifact[] artifact;
 	public DeclaredArtifactRunOnServerActionDelegate(IServer s, IModuleArtifact[] artifact) {
-		this.s2 = s;
+		super(s);
 		this.artifact = artifact;
 	}
-	public IServer getServer(IModule module, IModuleArtifact moduleArtifact, IProgressMonitor monitor) throws CoreException {
-		return s2;
-	}
+
 	
 	/**
 	 * 

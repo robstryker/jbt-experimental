@@ -12,9 +12,12 @@ package org.eclipse.wst.server.launchbar.remote.launch;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IModuleArtifact;
 import org.eclipse.wst.server.core.IServer;
+import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.ui.internal.actions.RunOnServerActionDelegate;
 
 /**
@@ -23,11 +26,28 @@ import org.eclipse.wst.server.ui.internal.actions.RunOnServerActionDelegate;
  * through the workflow to choose one. 
  */
 public class DeclaredServerRunOnServerActionDelegate extends RunOnServerActionDelegate {
-	private IServer s2;
+	protected IServer s2;
 	public DeclaredServerRunOnServerActionDelegate(IServer s) {
 		this.s2 = s;
 	}
 	public IServer getServer(IModule module, IModuleArtifact moduleArtifact, IProgressMonitor monitor) throws CoreException {
+		IModule m = moduleArtifact.getModule();
+		IModule[] parentModules = s2.getRootModules(module,
+				monitor);
+		if (parentModules != null && parentModules.length != 0) {
+			module = (IModule) parentModules[0];
+		}
+		
+		monitor.beginTask("Preparing launch", 200);
+		IServerWorkingCopy serverWC = s2.createWorkingCopy();
+		IStatus stat = s2.canModifyModules( new IModule[]{module}, new IModule[]{}, 
+				new SubProgressMonitor(monitor, 50));
+		if( stat.isOK() ) {
+			serverWC.modifyModules(new IModule[] { module },
+					new IModule[0], new SubProgressMonitor(monitor, 75));
+			s2 = serverWC.save(false, new SubProgressMonitor(monitor, 75));
+		}
+		monitor.done();
 		return s2;
 	}
 }

@@ -5,6 +5,7 @@
          point="org.eclipse.remote.core.remoteServices">
       <connectionType
             canAdd="false"
+            canEdit="false"
             id="org.eclipse.wst.server.launchbar.remote.connection"
             name="Server Adapter"
             scheme="dummyscheme">
