@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.remote.core.remoteServices">
+      <connectionType
+            canAdd="false"
+            canEdit="false"
+            id="org.eclipse.wst.server.launchbar.connection"
+            name="Server Adapter"
+            scheme="dummyscheme">
+      </connectionType>
+      <connectionTypeService
+            connectionTypeId="org.eclipse.wst.server.launchbar.connection"
+            factory="org.eclipse.wst.server.launchbar.ui.RemoteTypeUIService$Factory"
+            service="org.eclipse.remote.ui.IRemoteUIConnectionService">
+      </connectionTypeService>
+   </extension>
+   
+   
+   
+   <extension
+         point="org.eclipse.launchbar.core.launchBarContributions">
+      <targetType
+            connectionTypeId="org.eclipse.wst.server.launchbar.connection"
+            id="org.eclipse.wst.server.launchbar.connection">
+      </targetType>
+      <objectProvider
+            class="org.eclipse.wst.server.launchbar.ModuleObjectProvider"
+            id="org.eclipse.wst.server.launchbar.ModuleObjectProvider">
+      </objectProvider>
+      <descriptorType
+            class="org.eclipse.wst.server.launchbar.ModuleDescriptorType"
+            id="org.eclipse.wst.server.launchbar.ModuleDescriptorType"
+            priority="5">
+      </descriptorType>
+      <configType
+            descriptorType="org.eclipse.wst.server.launchbar.ModuleDescriptorType"
+            isDefault="false"
+            launchConfigurationType="org.eclipse.wst.server.launchbar.serverAdapterLaunch"
+            targetType="org.eclipse.wst.server.launchbar.connection">
+      </configType>
+      <configProvider
+            descriptorType="org.eclipse.wst.server.launchbar.ModuleDescriptorType"
+            class="org.eclipse.wst.server.launchbar.ModuleLaunchConfigurationProvider"
+            launchConfigurationType="org.eclipse.wst.server.launchbar.serverAdapterLaunch"
+            priority="1">
+      </configProvider>
+   </extension>
+   <extension
+         point="org.eclipse.debug.core.launchConfigurationTypes">
+      <launchConfigurationType
+            delegate="org.eclipse.wst.server.launchbar.ServerLaunchBarDelegate"
+            delegateDescription="A launch for executing the &quot;Run on Server&quot; action"
+            delegateName="Run On Server Launch"
+            id="org.eclipse.wst.server.launchbar.serverAdapterLaunch"
+            modes="run,debug,profile"
+            name="Server Adapter Launchbar Configuration"
+            public="false">
+      </launchConfigurationType>
+   </extension>
+   <extension
+         point="org.eclipse.launchbar.ui.launchBarUIContributions">
+      <descriptorUI
+            descriptorTypeId="org.eclipse.wst.server.launchbar.ModuleDescriptorType"
+            labelProvider="org.eclipse.wst.server.launchbar.ui.ModuleDescriptorLabelProvider">
+      </descriptorUI>
+      <descriptorUI
+            descriptorTypeId="org.eclipse.wst.server.launchbar.ModuleDescriptorType"
+            labelProvider="org.eclipse.wst.server.launchbar.ui.ModuleDescriptorLabelProvider">
+      </descriptorUI>
+   </extension>
+
+</plugin>
